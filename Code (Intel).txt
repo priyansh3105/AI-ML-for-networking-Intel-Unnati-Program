@@ -1,0 +1,49 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score
+import joblib
+
+# 📂 Load the dataset
+df = pd.read_csv("traffic.csv")
+
+# 🧾 Print column names
+print("📋 Columns in dataset:", df.columns.tolist())
+
+# 🛠️ Preprocessing
+label_column = 'Label (0 = Unencrypted, 1 = Encrypted)'
+X = df.drop(label_column, axis=1)
+y = df[label_column]
+
+# Convert categorical features to numeric using one-hot encoding
+X = pd.get_dummies(X)
+
+# 📚 Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 🤖 Train the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# 📊 Feature importance visualization
+importances = model.feature_importances_
+feature_names = X.columns
+sorted_indices = importances.argsort()[::-1]
+
+plt.figure(figsize=(10, 6))
+plt.title("🔍 Feature Importance")
+plt.bar(range(len(importances)), importances[sorted_indices], align="center")
+plt.xticks(range(len(importances)), feature_names[sorted_indices], rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig("feature_importance.png")
+plt.show()
+
+# 🧪 Evaluate model
+y_pred = model.predict(X_test)
+print("✅ Accuracy:", accuracy_score(y_test, y_pred))
+print("\n📄 Classification Report:\n", classification_report(y_test, y_pred))
+
+# 💾 Save the model
+joblib.dump(model, "traffic_model.joblib")
+print("✅ Model saved as traffic_model.joblib")
